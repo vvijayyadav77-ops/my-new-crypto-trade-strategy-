@@ -8,10 +8,6 @@ schedule:
 permissions:
 contents: write
 
-concurrency:
-group: paper-bot
-cancel-in-progress: false
-
 jobs:
 run-paper-bot:
 runs-on: ubuntu-latest
