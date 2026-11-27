@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BTC Paper Trading Dashboard</title>
+<style>
+:root{font-family:system-ui,Arial,sans-serif;color:#172033;background:#f3f5f9}
+body{margin:0;padding:24px;max-width:1100px;margin:auto}
+h1{margin:0 0 6px}.muted{color:#667085}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:22px 0}
+.card{background:white;border-radius:14px;padding:18px;box-shadow:0 2px 12px #1720330d}
+.label{font-size:13px;color:#667085}.value{font-size:25px;font-weight:700;margin-top:8px;overflow-wrap:anywhere}
+.panel{background:white;border-radius:14px;padding:18px;margin:14px 0;overflow:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:10px;border-bottom:1px solid #edf0f4;white-space:nowrap}
+.positive{color:#087443}.negative{color:#b42318}.pill{display:inline-block;background:#eef4ff;color:#3538cd;border-radius:20px;padding:5px 10px}
+</style>
+</head>
+<body>
+<h1>BTC Paper Trading Dashboard</h1>
+<div class="muted">Simulated trading only · BTC/USDT · EMA 9/21 · 5-minute candles</div>
+<div class="grid">
+ <div class="card"><div class="label">Current BTC price</div><div class="value" id="price">—</div></div>
+ <div class="card"><div class="label">Virtual equity</div><div class="value" id="equity">—</div></div>
+ <div class="card"><div class="label">Total PNL</div><div class="value" id="pnl">—</div></div>
+ <div class="card"><div class="label">Available cash</div><div class="value" id="cash">—</div></div>
+ <div class="card"><div class="label">Realized PNL</div><div class="value" id="realized">—</div></div>
+ <div class="card"><div class="label">Unrealized PNL</div><div class="value" id="unrealized">—</div></div>
+ <div class="card"><div class="label">Fees paid</div><div class="value" id="fees">—</div></div>
+ <div class="card"><div class="label">Position quantity (BTC)</div><div class="value" id="qty">—</div></div>
+</div>
+<div class="panel"><b>Bot status:</b> <span class="pill" id="status">Loading…</span><p class="muted" id="updated"></p><p class="muted" id="settings"></p></div>
+<div class="panel"><h2>Trade history</h2><table><thead><tr><th>Time (UTC)</th><th>Action</th><th>Price</th><th>Quantity</th><th>Fee</th><th>Realized PNL</th><th>Reason</th></tr></thead><tbody id="trades"><tr><td colspan="7">Loading…</td></tr></tbody></table></div>
+<script>
+const money=n=>Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});
+const num=n=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:8});
+async function load(){
+ try{
+  const [sr,tr]=await Promise.all([fetch('data/state.json?ts='+Date.now()),fetch('data/trades.csv?ts='+Date.now())]);
+  if(!sr.ok) throw Error('No bot data yet. Run the GitHub Action once.');
+  const s=await sr.json();
+  for(const [id,val] of Object.entries({price:money(s.last_price),equity:money(s.equity),pnl:money(s.total_pnl),cash:money(s.cash),realized:money(s.realized_pnl),unrealized:money(s.unrealized_pnl),fees:money(s.fees_paid),qty:num(s.quantity)})) document.getElementById(id).textContent=val;
+  const p=document.getElementById('pnl');p.className='value '+(Number(s.total_pnl)>=0?'positive':'negative');
+  document.getElementById('status').textContent=s.status||'Running';
+  document.getElementById('updated').textContent='Last update: '+(s.updated_at||'—')+' · Refresh page to see latest data.';
+  document.getElementById('settings').textContent=`Fee model: ${(s.fee_rate*100).toFixed(2)}% per side · Stop loss: ${s.stop_loss_pct}% · Take profit: ${s.take_profit_pct}%`;
+  if(tr.ok){
+   const lines=(await tr.text()).trim().split(/\r?\n/).slice(1).reverse();
+   document.getElementById('trades').innerHTML=lines.length?lines.map(line=>{
+    const c=line.split(',');return `<tr>${c.map(x=>`<td>${x.replaceAll('&','&amp;').replaceAll('<','&lt;')}</td>`).join('')}</tr>`;
+   }).join(''):'<tr><td colspan="7">No trades yet.</td></tr>';
+  }
+ }catch(e){document.getElementById('status').textContent=e.message;}
+}
+load();setInterval(load,60000);
+</script>
+</body></html>
