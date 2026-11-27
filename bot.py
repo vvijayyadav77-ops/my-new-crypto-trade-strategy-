@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 import requests
 
-BASE = "https://api.binance.com"
+BASE = "https://data-api.binance.vision"
 SYMBOL = "BTCUSDT"
 INTERVAL = "5m"
 START_BALANCE = 10_000.0
