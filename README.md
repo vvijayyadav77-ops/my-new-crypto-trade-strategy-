@@ -1,1 +1,0 @@
-# my-new-crypto-trade-strategy-
