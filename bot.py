@@ -27,7 +27,16 @@ API_BASE = os.getenv(
 CHECK_INTERVAL = 60
 
 def api_get(path, params=None):
-query = urllib.parse.urlencode(params or {})
+    query = urllib.parse.urlencode(params or {})
+    url = f"{API_BASE}{path}" + (f"?{query}" if query else "")
+
+    req = urllib.request.Request(
+        url,
+        headers={"User-Agent": "GitHub-Paper-Trading-Bot/1.0"}
+    )
+
+    with urllib.request.urlopen(req, timeout=20) as response:
+        return json.loads(response.read().decode("utf-8"))
 url = f"{API_BASE}{path}" + (f"?{query}" if query else "")
 
 req = urllib.request.Request(
