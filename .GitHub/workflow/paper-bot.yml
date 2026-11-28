@@ -37,3 +37,4 @@ jobs:
           git add data/trading_data.json
           git diff --cached --quiet || git commit -m "Update paper trading data"
           git push
+
