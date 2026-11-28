@@ -1,1 +1,26 @@
 
+{
+  "initial_balance_inr": 10000,
+  "cash_inr": 10000,
+  "btc_qty": 0,
+  "entry_price_inr": null,
+  "entry_fee_inr": 0,
+  "trades": [],
+  "last_processed_candle": null,
+  "updated_at": null,
+  "status": "Waiting for first GitHub Actions run",
+  "strategy": "EMA 9/21 + RSI 14 + MACD 12/26/9 + Supertrend 10/3",
+  "symbol": "BTCUSDT",
+  "interval": "5m",
+  "usdt_inr": 90,
+  "fee_rate": 0.001,
+  "equity_inr": 10000,
+  "available_balance_inr": 10000,
+  "total_pnl_inr": 0,
+  "realized_pnl_inr": 0,
+  "unrealized_pnl_inr": 0,
+  "total_fees_inr": 0,
+  "total_trades": 0,
+  "win_rate": 0,
+  "signal": "WAITING"
+}
