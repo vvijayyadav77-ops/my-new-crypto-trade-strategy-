@@ -28,6 +28,8 @@ jobs:
 
       - name: Run paper trading bot
         run: python -u bot.py
+        env:
+          USDT_INR: "90"
 
       - name: Save trading data
         if: always()
