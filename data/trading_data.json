@@ -1,13 +1,44 @@
 {
   "initial_balance_inr": 10000.0,
-  "cash_inr": 10000.0,
+  "cash_inr": 503.008,
   "btc_qty": 0.0,
   "entry_price_inr": null,
   "entry_fee_inr": 0.0,
-  "trades": [],
-  "last_processed_candle": 1795857600000,
-  "updated_at": "2026-11-28T09:25:45.642530+00:00",
-  "status": "Waiting for first signal",
+  "trades": [
+    {
+      "time": "2026-11-28T12:12:04.802147+00:00",
+      "symbol": "RENDERUSDT",
+      "side": "BUY",
+      "price_inr": 120.78,
+      "qty": 26.17566457384294,
+      "fee_inr": 3.1646614286574075,
+      "pnl_inr": 0,
+      "reason": "Strong Momentum"
+    },
+    {
+      "time": "2026-11-28T12:12:04.802136+00:00",
+      "symbol": "FFUSDT",
+      "side": "BUY",
+      "price_inr": 8.7183,
+      "qty": 362.7425329479371,
+      "fee_inr": 3.165663888888889,
+      "pnl_inr": 0,
+      "reason": "Strong Momentum"
+    },
+    {
+      "time": "2026-11-28T12:12:04.802118+00:00",
+      "symbol": "SSVUSDT",
+      "side": "BUY",
+      "price_inr": 247.5,
+      "qty": 12.781818181818181,
+      "fee_inr": 3.1666666666666665,
+      "pnl_inr": 0,
+      "reason": "Strong Momentum"
+    }
+  ],
+  "last_processed_candle": 1795867500000,
+  "updated_at": "2026-11-28T12:14:35.026148+00:00",
+  "status": "BUY: RENDERUSDT",
   "strategy": "EMA 9/21 + RSI 14 + MACD 12/26/9 + Supertrend 10/3",
   "symbol": "BTCUSDT",
   "interval": "5m",
@@ -24,19 +55,182 @@
     "supertrend": "BEARISH"
   },
   "signal": "HOLD",
-  "market_value_inr": 0.0,
-  "equity_inr": 10000.0,
-  "available_balance_inr": 10000.0,
+  "market_value_inr": 9487.495,
+  "equity_inr": 9990.503,
+  "available_balance_inr": 503.008,
   "unrealized_pnl_inr": 0.0,
   "realized_pnl_inr": 0,
-  "total_pnl_inr": 0.0,
-  "total_fees_inr": 0,
+  "total_pnl_inr": -9.497,
+  "total_fees_inr": 9.497,
   "total_trades": 0,
   "win_rate": 0,
   "open_position": {
-    "side": "NONE",
-    "qty_btc": 0.0,
+    "side": "BUY",
+    "qty_btc": 0,
     "entry_price_inr": null,
-    "market_value_inr": 0.0
-  }
+    "market_value_inr": 9487.495
+  },
+  "positions": {
+    "SSVUSDT": {
+      "symbol": "SSVUSDT",
+      "qty": 12.781818181818181,
+      "entry_price_inr": 247.5,
+      "current_price_inr": 247.5,
+      "entry_fee_inr": 3.1666666666666665,
+      "score": 73.47,
+      "entry_time": "2026-11-28T12:12:04.802095+00:00"
+    },
+    "FFUSDT": {
+      "symbol": "FFUSDT",
+      "qty": 362.7425329479371,
+      "entry_price_inr": 8.7183,
+      "current_price_inr": 8.7183,
+      "entry_fee_inr": 3.165663888888889,
+      "score": 73.31,
+      "entry_time": "2026-11-28T12:12:04.802132+00:00"
+    },
+    "RENDERUSDT": {
+      "symbol": "RENDERUSDT",
+      "qty": 26.17566457384294,
+      "entry_price_inr": 120.78,
+      "current_price_inr": 120.78,
+      "entry_fee_inr": 3.1646614286574075,
+      "score": 71.64,
+      "entry_time": "2026-11-28T12:12:04.802144+00:00"
+    }
+  },
+  "scanned_coins": 100,
+  "top_momentum_coins": [
+    {
+      "symbol": "SSVUSDT",
+      "price_usdt": 2.75,
+      "price_inr": 247.5,
+      "rsi": 57.36475233693456,
+      "momentum_3": 0.36496350364962904,
+      "momentum_6": 0.5484460694698434,
+      "volume_ratio": 1.5522956878701157,
+      "score": 73.47,
+      "bullish": true,
+      "bearish": false,
+      "candle_id": 1795867500000
+    },
+    {
+      "symbol": "FFUSDT",
+      "price_usdt": 0.09687,
+      "price_inr": 8.7183,
+      "rsi": 63.7248857388652,
+      "momentum_3": 0.3626191462909212,
+      "momentum_6": 0.4979769685651947,
+      "volume_ratio": 1.4799917984642161,
+      "score": 73.31,
+      "bullish": true,
+      "bearish": false,
+      "candle_id": 1795867500000
+    },
+    {
+      "symbol": "RENDERUSDT",
+      "price_usdt": 1.342,
+      "price_inr": 120.78,
+      "rsi": 57.67640325253855,
+      "momentum_3": 0.14925373134329067,
+      "momentum_6": 0.2989536621823552,
+      "volume_ratio": 1.7038750306711226,
+      "score": 71.64,
+      "bullish": true,
+      "bearish": false,
+      "candle_id": 1795867500000
+    },
+    {
+      "symbol": "ROBOUSDT",
+      "price_usdt": 0.00299,
+      "price_inr": 0.2691,
+      "rsi": 53.42188862075612,
+      "momentum_3": 3.460207612456734,
+      "momentum_6": 3.819444444444442,
+      "volume_ratio": 2.0335085863509046,
+      "score": 71.46,
+      "bullish": false,
+      "bearish": false,
+      "candle_id": 1795867500000
+    },
+    {
+      "symbol": "ICPUSDT",
+      "price_usdt": 1.935,
+      "price_inr": 174.15,
+      "rsi": 55.72039975973323,
+      "momentum_3": 0.15527950310558758,
+      "momentum_6": 0.20714655618849775,
+      "volume_ratio": 1.8787410564447244,
+      "score": 71.4,
+      "bullish": true,
+      "bearish": false,
+      "candle_id": 1795867500000
+    },
+    {
+      "symbol": "ADAUSDT",
+      "price_usdt": 0.1464,
+      "price_inr": 13.176,
+      "rsi": 59.110480696882604,
+      "momentum_3": 0.1367989056087593,
+      "momentum_6": 0.06835269993163973,
+      "volume_ratio": 1.389051401968909,
+      "score": 70.89,
+      "bullish": true,
+      "bearish": false,
+      "candle_id": 1795867500000
+    },
+    {
+      "symbol": "NIGHTUSDT",
+      "price_usdt": 0.05401,
+      "price_inr": 4.8609,
+      "rsi": 59.31009136759968,
+      "momentum_3": -1.2794735880095054,
+      "momentum_6": -0.9354365370506157,
+      "volume_ratio": 1.8181519724755453,
+      "score": 70,
+      "bullish": false,
+      "bearish": false,
+      "candle_id": 1795867500000
+    },
+    {
+      "symbol": "SNXXBUSDT",
+      "price_usdt": 1.92,
+      "price_inr": 172.79999999999998,
+      "rsi": 52.189924500257796,
+      "momentum_3": 0.0,
+      "momentum_6": 0.0,
+      "volume_ratio": 2.841606500088833,
+      "score": 70,
+      "bullish": false,
+      "bearish": false,
+      "candle_id": 1795867500000
+    },
+    {
+      "symbol": "FETUSDT",
+      "price_usdt": 0.1237,
+      "price_inr": 11.133000000000001,
+      "rsi": 68.47710015497874,
+      "momentum_3": 0.5691056910569259,
+      "momentum_6": 0.5691056910569259,
+      "volume_ratio": 0.32162503792774155,
+      "score": 64.55,
+      "bullish": true,
+      "bearish": false,
+      "candle_id": 1795867500000
+    },
+    {
+      "symbol": "HEIUSDT",
+      "price_usdt": 0.0772,
+      "price_inr": 6.948,
+      "rsi": 58.20661712471761,
+      "momentum_3": 0.5208333333333481,
+      "momentum_6": 0.5208333333333481,
+      "volume_ratio": 0.5105119206247084,
+      "score": 64.17,
+      "bullish": true,
+      "bearish": false,
+      "candle_id": 1795867500000
+    }
+  ],
+  "open_positions": 3
 }
