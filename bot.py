@@ -9,7 +9,7 @@ from pathlib import Path
 DATA_FILE = Path("data/trading_data.json")
 
 SYMBOL = "BTCUSDT"
-INTERVAL = "5m"
+INTERVAL = "1m"
 
 INITIAL_BALANCE_INR = 10000.0
 USDT_INR = float(os.getenv("USDT_INR", "90"))
@@ -24,7 +24,7 @@ API_BASE = os.getenv(
     "https://data-api.binance.vision"
 )
 
-CHECK_INTERVAL = 60
+CHECK_INTERVAL = 10
 
 
 def api_get(path, params=None):
