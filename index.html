@@ -1,65 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0b1220">
-  <title>Binance Spot Paper Bot</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b1220">
+<title>Binance Momentum Paper Trading</title>
+<link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <header class="topbar">
-    <div><div class="eyebrow">AUTOMATED PAPER TRADING</div><h1>₿ Spot Algo Dashboard</h1></div>
-    <div class="status"><span class="dot"></span><span id="botStatus">Loading data…</span></div>
-  </header>
-  <main>
-    <section class="banner">
-      <div><span class="muted">MARKET</span><h2>BTC / USDT <small>· Spot</small></h2><p>5-minute candles · EMA + RSI + MACD + Supertrend</p></div>
-      <div class="price"><span class="muted">LAST PRICE</span><strong id="price">—</strong><small id="priceUsdt">—</small></div>
-    </section>
-    <section class="grid cards">
-      <article class="card"><span>Total Equity</span><strong id="equity">₹—</strong><small>Cash + open position value</small></article>
-      <article class="card"><span>Total P&amp;L</span><strong id="totalPnl">₹—</strong><small id="pnlPct">Since start</small></article>
-      <article class="card"><span>Available Balance</span><strong id="cash">₹—</strong><small>Ready for next trade</small></article>
-      <article class="card"><span>Today's / Realized P&amp;L</span><strong id="realized">₹—</strong><small>Closed trades</small></article>
-      <article class="card"><span>Unrealized P&amp;L</span><strong id="unrealized">₹—</strong><small>Open position</small></article>
-      <article class="card"><span>Trading Fees</span><strong id="fees">₹—</strong><small>Paper fee estimate</small></article>
-      <article class="card"><span>Win Rate</span><strong id="winRate">—</strong><small id="tradeCount">0 closed trades</small></article>
-      <article class="card"><span>Current Signal</span><strong id="signal">—</strong><small id="updated">Not updated yet</small></article>
-    </section>
-    <section class="grid lower">
-      <article class="panel">
-        <div class="panel-head"><h3>Open Position</h3><span class="pill" id="positionSide">NONE</span></div>
-        <div class="position-grid">
-          <div><small>BTC Quantity</small><strong id="qty">0</strong></div>
-          <div><small>Entry Price</small><strong id="entry">—</strong></div>
-          <div><small>Market Value</small><strong id="marketValue">₹0</strong></div>
-        </div>
-        <div class="divider"></div>
-        <h3>Indicator Snapshot</h3>
-        <div class="indicators">
-          <div><span>EMA 9 / 21</span><b id="ema">—</b></div>
-          <div><span>RSI 14</span><b id="rsi">—</b></div>
-          <div><span>MACD</span><b id="macd">—</b></div>
-          <div><span>Supertrend</span><b id="supertrend">—</b></div>
-        </div>
-      </article>
-      <article class="panel">
-        <div class="panel-head"><h3>Bot Information</h3></div>
-        <p id="botMessage" class="message">Waiting for bot data.</p>
-        <div class="info-row"><span>Strategy</span><b>EMA 9/21 + RSI 14</b></div>
-        <div class="info-row"><span>Confirmation</span><b>MACD + Supertrend</b></div>
-        <div class="info-row"><span>Stop Loss</span><b>1.5%</b></div>
-        <div class="info-row"><span>Take Profit</span><b>3%</b></div>
-        <div class="info-row"><span>Fee assumption</span><b>0.10% each side</b></div>
-      </article>
-    </section>
-    <section class="panel history">
-      <div class="panel-head"><h3>Trade History</h3><span class="muted">Latest 100 events</span></div>
-      <div class="table-wrap"><table><thead><tr><th>Time (UTC)</th><th>Side</th><th>Price</th><th>BTC Qty</th><th>Fee</th><th>Realized P&amp;L</th><th>Reason</th></tr></thead><tbody id="trades"><tr><td colspan="7" class="empty">No trades yet.</td></tr></tbody></table></div>
-    </section>
-    <p class="footnote">Paper trading only. No real orders are sent. INR values use a configurable USDT/INR conversion estimate. Dashboard refreshes automatically every 60 seconds.</p>
-  </main>
-  <script src="script.js"></script>
-</body>
-</html>
+
+<header class="topbar">
+  <div>
+    <div class="eyebrow">AUTOMATED PAPER TRADING</div>
+    <h1>₿ Momentum Algo Dashboard</h1>
+  </div>
+
+  <div class="status">
+    <span class="dot"></span>
+    <span id="botStatus">Loading data...</span>
+  </div>
+</header>
+
+<main>
+
+<section class="banner">
+  <div>
+    <span class="muted">STRATEGY</span>
+    <h2>TOP 100 USDT COINS <small>· Spot</small></h2>
+    <p>Multi-Coin Momentum · EMA + RSI + MACD + Volume</p>
+  </div>
+
+  <div class="price">
+    <span class="muted">SCANNED COINS</span>
+    <strong id="scannedCoins">0</strong>
+    <small>Top 100 Market Scanner</small>
+  </div>
+</section>
+
+<section class="grid cards">
+
+  <article class="card">
+    <span>Total Equity</span>
+    <strong id="equity">₹—</strong>
+    <small>Cash + Open Positions</small>
+  </article>
+
+  <article class="card">
+    <span>Total P&amp;L</span>
+    <strong id="totalPnl">₹—</strong>
+    <small id="pnlPct">Since start</small>
+  </article>
+
+  <article class="card">
+    <span>Available Balance</span>
+    <strong id="cash">₹—</strong>
+    <small>Available Cash</small>
+  </article>
+
+  <article class="card">
+    <span>Realized P&amp;L</span>
+    <strong id="realized">₹—</strong>
+    <small>Closed Trades</small>
+  </article>
+
+  <article class="card">
+    <span>Unrealized P&amp;L</span>
+    <strong id="unrealized">₹—</strong>
+    <small>Open Trades</small>
+  </article>
+
+  <article class="card">
+    <span>Trading Fees</span>
+    <strong id="fees">₹—</strong>
+    <small>Estimated Fees</small>
+  </article>
+
+  <article class="card">
+    <span>Win Rate</span>
+    <strong id="winRate">—</strong>
+    <small id="tradeCount">0 closed trades</small>
+  </article>
+
+  <article class="card">
+    <span>Open Positions</span>
+    <strong id="openCount">0 / 3</strong>
+    <small>Maximum 3 Trades</small>
+  </article>
+
+</section>
+
+<section class="panel history">
+
+  <div class="panel-head">
+    <h3>Open Positions</h3>
+    <span class="pill" id="positionSide">NONE</span>
+  </div>
+
+  <div class="table-wrap">
+
+    <table>
+      <thead>
+        <tr>
+          <th>Coin</th>
+          <th>Quantity</th>
+          <th>Entry Price</th>
+          <th>Current Price</th>
+          <th>Market Value</th>
+          <th>PNL</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+
+      <tbody id="positions">
+        <tr>
+          <td colspan="7" class="empty">No open positions.</td>
+        </tr>
+      </tbody>
+
+    </table>
+
+  </div>
+
+</section>
+
+<section class="panel history">
+
+  <div class="panel-head">
+    <h3>🔥 Top 10 Momentum Coins</h3>
+    <span class="pill">Live Scanner</span>
+  </div>
+
+  <div class="table-wrap">
+
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Coin</th>
+          <th>Price</th>
+          <th>RSI</th>
+          <th>Momentum 3</th>
+          <th>Momentum 6</th>
+          <th>Volume Ratio</th>
+          <th>Score</th>
+          <th>Signal</th>
+        </tr>
+      </thead>
+
+      <tbody id="momentum">
+        <tr>
+          <td colspan="9" class="empty">Waiting for scanner...</td>
+        </tr>
+      </tbody>
+
+    </table>
+
+  </div>
+
+</section>
+
+<section class="grid lower">
+
+  <article class="panel">
+
+    <h3>Strategy Information</h3>
+
+    <div class="info-row">
+      <span>Strategy</span>
+      <b>Multi-Coin Momentum</b>
+    </div>
+
+    <div class="info-row">
+      <span>Coin Scanner</span>
+      <b>Top 100 USDT</b>
+    </div>
+
+    <div class="info-row">
+      <span>Timeframe</span>
+      <b>5 Minutes</b>
+    </div>
+
+    <div class="info-row">
+      <span>Maximum Positions</span>
+      <b>3</b>
+    </div>
+
+    <div class="info-row">
+      <span>Stop Loss</span>
+      <b>1.5%</b>
+    </div>
+
+    <div class="info-row">
+      <span>Take Profit</span>
+      <b>3%</b>
+    </div>
+
+    <div class="info-row">
+      <span>Trading Fee</span>
+      <b>0.10% Each Side</b>
+    </div>
+
+    <div class="info-row">
+      <span>Last Updated</span>
+      <b id="updated">—</b>
+    </div>
+
+  </article>
+
+  <article class="panel">
+
+    <h3>Bot Status</h3>
+
+    <p id="botMessage" class="message">
+      Waiting for bot data.
+    </p>
+
+    <div class="info-row">
+      <span>Momentum Filter</
