@@ -14,7 +14,7 @@ FEE_RATE = 0.001  # 0.1% paper-trading fee per side
 STOP_LOSS_PCT = 0.015
 TAKE_PROFIT_PCT = 0.03
 POSITION_FRACTION = 0.95
-API_BASE = os.getenv("BINANCE_BASE_URL", "https://api.binance.com")
+API_BASE = os.getenv("BINANCE_BASE_URL", "https://data-api.binance.vision")
 
 def api_get(path, params=None):
     query = urllib.parse.urlencode(params or {})
