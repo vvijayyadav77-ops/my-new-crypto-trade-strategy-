@@ -1,10 +1,6 @@
 const DATA_URL = "data/trading_data.json";
-const WS_URL = "wss://data-stream.binance.vision:443/ws/btcusdt@trade";
 
 let state = {};
-let livePriceUSDT = 0;
-let socket = null;
-let reconnectTimer = null;
 
 const money = n =>
   "₹" + Number(n || 0).toLocaleString("en-IN", {
@@ -18,6 +14,7 @@ const num = (n, d = 2) =>
 
 function set(id, value) {
   const el = document.getElementById(id);
+
   if (el) el.textContent = value;
 }
 
@@ -26,81 +23,306 @@ function colorize(el, value) {
 
   el.classList.remove("positive", "negative");
 
-  if (value > 0) el.classList.add("positive");
-  if (value < 0) el.classList.add("negative");
+  if (Number(value) > 0) {
+    el.classList.add("positive");
+  }
+
+  if (Number(value) < 0) {
+    el.classList.add("negative");
+  }
+}
+
+function renderPositions() {
+
+  const body = document.getElementById("positions");
+
+  const positions = state.positions || {};
+
+  const entries = Object.values(positions);
+
+  body.innerHTML = "";
+
+  if (!entries.length) {
+    body.innerHTML =
+      '<tr><td colspan="7" class="empty">No open positions.</td></tr>';
+
+    return;
+  }
+
+  entries.forEach(p => {
+
+    const price = Number(p.current_price_inr || 0);
+
+    const entry = Number(p.entry_price_inr || 0);
+
+    const qty = Number(p.qty || 0);
+
+    const pnl = (price - entry) * qty;
+
+    const market = price * qty;
+
+    const tr = document.createElement("tr");
+
+    const values = [
+      p.symbol,
+      num(qty, 8),
+      money(entry),
+      money(price),
+      money(market),
+      money(pnl),
+      num(p.score)
+    ];
+
+    values.forEach((value, index) => {
+
+      const td = document.createElement("td");
+
+      td.textContent = value;
+
+      if (index === 5) {
+        colorize(td, pnl);
+      }
+
+      tr.appendChild(td);
+
+    });
+
+    body.appendChild(tr);
+
+  });
+
+}
+
+function renderMomentum() {
+
+  const body = document.getElementById("momentum");
+
+  const coins = state.top_momentum_coins || [];
+
+  body.innerHTML = "";
+
+  if (!coins.length) {
+
+    body.innerHTML =
+      '<tr><td colspan="9" class="empty">Waiting for scanner...</td></tr>';
+
+    return;
+  }
+
+  coins.forEach((coin, index) => {
+
+    const tr = document.createElement("tr");
+
+    const signal = coin.bullish ? "BUY" : "HOLD";
+
+    const values = [
+      index + 1,
+      coin.symbol,
+      money(coin.price_inr),
+      num(coin.rsi),
+      num(coin.momentum_3) + "%",
+      num(coin.momentum_6) + "%",
+      num(coin.volume_ratio) + "x",
+      num(coin.score),
+      signal
+    ];
+
+    values.forEach((value, i) => {
+
+      const td = document.createElement("td");
+
+      td.textContent = value;
+
+      if (i === 8 && coin.bullish) {
+        td.className = "positive";
+      }
+
+      if (i === 8 && !coin.bullish) {
+        td.className = "negative";
+      }
+
+      tr.appendChild(td);
+
+    });
+
+    body.appendChild(tr);
+
+  });
+
+}
+
+function renderTrades() {
+
+  const body = document.getElementById("trades");
+
+  const trades = state.trades || [];
+
+  body.innerHTML = "";
+
+  if (!trades.length) {
+
+    body.innerHTML =
+      '<tr><td colspan="8" class="empty">No trades yet.</td></tr>';
+
+    return;
+  }
+
+  trades.forEach(t => {
+
+    const tr = document.createElement("tr");
+
+    const values = [
+
+      t.time
+        ? new Date(t.time).toLocaleString()
+        : "—",
+
+      t.symbol || "—",
+
+      t.side || "—",
+
+      money(t.price_inr),
+
+      num(t.qty, 8),
+
+      money(t.fee_inr),
+
+      money(t.pnl_inr),
+
+      t.reason || "—"
+
+    ];
+
+    values.forEach((value, index) => {
+
+      const td = document.createElement("td");
+
+      td.textContent = value;
+
+      if (index === 2) {
+        td.className =
+          t.side === "BUY" ? "positive" : "negative";
+      }
+
+      if (index === 6) {
+        colorize(td, t.pnl_inr);
+      }
+
+      tr.appendChild(td);
+
+    });
+
+    body.appendChild(tr);
+
+  });
+
 }
 
 function renderDashboard() {
-  if (!state.cash_inr && state.cash_inr !== 0) return;
 
-  const rate = Number(state.usdt_inr || 90);
-  const priceUSDT = livePriceUSDT || Number(state.current_price_usdt || 0);
-  const priceINR = priceUSDT * rate;
+  if (state.cash_inr === undefined) return;
 
-  const qty = Number(state.btc_qty || 0);
   const cash = Number(state.cash_inr || 0);
-  const marketValue = qty * priceINR;
 
-  const unrealized = qty > 0
-    ? (priceINR - Number(state.entry_price_inr || 0)) * qty
-    : 0;
+  const equity = Number(state.equity_inr || 0);
 
-  const equity = cash + marketValue;
-  const initial = Number(state.initial_balance_inr || 10000);
-  const totalPnl = equity - initial;
-
-  set("price", money(priceINR));
-  set("priceUsdt", "$" + num(priceUSDT, 2) + " USDT");
-
-  set("equity", money(equity));
-  set("totalPnl", money(totalPnl));
-
-  colorize(document.getElementById("totalPnl"), totalPnl);
-
-  const pct = initial ? totalPnl / initial * 100 : 0;
-
-  set("pnlPct", (pct >= 0 ? "+" : "") + num(pct) + "% since start");
-
-  set("cash", money(cash));
-  set("realized", money(state.realized_pnl_inr));
-  set("unrealized", money(unrealized));
-  set("fees", money(state.total_fees_inr));
-
-  colorize(document.getElementById("realized"), state.realized_pnl_inr);
-  colorize(document.getElementById("unrealized"), unrealized);
-
-  set("winRate", num(state.win_rate) + "%");
-  set("tradeCount", (state.total_trades || 0) + " closed trades");
-
-  set("positionSide", qty > 0 ? "BUY" : "NONE");
-  set("qty", num(qty, 8) + " BTC");
-
-  set(
-    "entry",
-    state.entry_price_inr ? money(state.entry_price_inr) : "—"
+  const initial = Number(
+    state.initial_balance_inr || 10000
   );
 
-  set("marketValue", money(marketValue));
+  const totalPnl = Number(state.total_pnl_inr || 0);
 
-  set("signal", state.signal || "—");
+  const realized = Number(state.realized_pnl_inr || 0);
 
-  const i = state.indicators || {};
+  const unrealized = Number(state.unrealized_pnl_inr || 0);
 
-  set("ema", money(i.ema9) + " / " + money(i.ema21));
-  set("rsi", num(i.rsi14));
-  set("macd", num(i.macd, 5) + " / " + num(i.macd_signal, 5));
-  set("supertrend", i.supertrend || "—");
+  const positions = state.positions || {};
+
+  const openCount = Object.keys(positions).length;
+
+  set("equity", money(equity));
+
+  set("totalPnl", money(totalPnl));
+
+  set("cash", money(cash));
+
+  set("realized", money(realized));
+
+  set("unrealized", money(unrealized));
+
+  set("fees", money(state.total_fees_inr));
+
+  colorize(
+    document.getElementById("totalPnl"),
+    totalPnl
+  );
+
+  colorize(
+    document.getElementById("realized"),
+    realized
+  );
+
+  colorize(
+    document.getElementById("unrealized"),
+    unrealized
+  );
+
+  const pct = initial
+    ? totalPnl / initial * 100
+    : 0;
+
+  set(
+    "pnlPct",
+    (pct >= 0 ? "+" : "") + num(pct) + "% since start"
+  );
+
+  set("winRate", num(state.win_rate) + "%");
+
+  set(
+    "tradeCount",
+    (state.total_trades || 0) + " closed trades"
+  );
+
+  set("openCount", openCount + " / 3");
+
+  set(
+    "positionSide",
+    openCount > 0 ? openCount + " OPEN" : "NONE"
+  );
+
+  set("scannedCoins", state.scanned_coins || 0);
 
   set("botMessage", state.status || "Paper bot running.");
 
-  set("updated", "Live price: " + new Date().toLocaleTimeString());
+  set(
+    "updated",
+    state.updated_at
+      ? new Date(state.updated_at).toLocaleString()
+      : "—"
+  );
+
+  set(
+    "botStatus",
+    "PAPER BOT ACTIVE"
+  );
+
+  renderPositions();
+
+  renderMomentum();
+
+  renderTrades();
+
 }
 
 async function loadDashboard() {
+
   try {
+
     const response = await fetch(
       DATA_URL + "?t=" + Date.now(),
-      { cache: "no-store" }
+      {
+        cache: "no-store"
+      }
     );
 
     if (!response.ok) {
@@ -109,99 +331,18 @@ async function loadDashboard() {
 
     state = await response.json();
 
-    if (!livePriceUSDT) {
-      livePriceUSDT = Number(state.current_price_usdt || 0);
-    }
-
-    set("botStatus", "Connecting live market...");
     renderDashboard();
 
-    const body = document.getElementById("trades");
-    body.innerHTML = "";
-
-    (state.trades || []).forEach(t => {
-      const tr = document.createElement("tr");
-
-      const values = [
-        t.time ? new Date(t.time).toLocaleString() : "—",
-        t.side || "—",
-        money(t.price_inr),
-        num(t.qty_btc, 8),
-        money(t.fee_inr),
-        money(t.pnl_inr),
-        t.reason || "—"
-      ];
-
-      values.forEach((v, index) => {
-        const td = document.createElement("td");
-        td.textContent = v;
-
-        if (index === 1) {
-          td.className = t.side === "BUY" ? "positive" : "negative";
-        }
-
-        if (index === 5) {
-          colorize(td, t.pnl_inr);
-        }
-
-        tr.appendChild(td);
-      });
-
-      body.appendChild(tr);
-    });
-
-    if (!(state.trades || []).length) {
-      body.innerHTML =
-        '<tr><td colspan="7" class="empty">No trades yet.</td></tr>';
-    }
-
   } catch (error) {
+
     set("botStatus", "Waiting for bot data");
+
     set("botMessage", error.message);
-  }
-}
 
-function connectWebSocket() {
-  if (socket) {
-    socket.close();
   }
 
-  socket = new WebSocket(WS_URL);
-
-  socket.onopen = () => {
-    set("botStatus", "LIVE BTC CONNECTED");
-    document.querySelector(".dot").style.background = "#31d0a0";
-  };
-
-  socket.onmessage = event => {
-    try {
-      const data = JSON.parse(event.data);
-
-      livePriceUSDT = Number(data.p);
-
-      renderDashboard();
-
-    } catch (error) {
-      console.error("Price update error:", error);
-    }
-  };
-
-  socket.onerror = () => {
-    set("botStatus", "WebSocket connection error");
-  };
-
-  socket.onclose = () => {
-    set("botStatus", "Reconnecting...");
-    document.querySelector(".dot").style.background = "#eab308";
-
-    clearTimeout(reconnectTimer);
-
-    reconnectTimer = setTimeout(connectWebSocket, 3000);
-  };
 }
 
 loadDashboard();
-connectWebSocket();
 
-// Refresh saved trading data every 30 seconds.
 setInterval(loadDashboard, 30000);
