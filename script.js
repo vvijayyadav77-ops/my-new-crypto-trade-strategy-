@@ -1,39 +1,207 @@
 const DATA_URL = "data/trading_data.json";
-const money = n => "₹" + Number(n || 0).toLocaleString("en-IN",{maximumFractionDigits:2});
-const num = (n,d=2) => Number(n || 0).toLocaleString("en-IN",{maximumFractionDigits:d});
-function colorize(el, value){el.classList.remove("positive","negative"); if(value>0)el.classList.add("positive");if(value<0)el.classList.add("negative");}
-function set(id,value){const el=document.getElementById(id);if(el)el.textContent=value;}
-async function loadDashboard(){
-  try{
-    const res=await fetch(DATA_URL+"?t="+Date.now(),{cache:"no-store"});
-    if(!res.ok)throw new Error("Dashboard data not found yet");
-    const d=await res.json();
-    set("botStatus",d.updated_at?"Bot data available":"Waiting for bot");
-    document.querySelector(".dot").style.background=d.updated_at?"#31d0a0":"#eab308";
-    set("price",money(d.current_price_inr));
-    set("priceUsdt",d.current_price_usdt?"$"+num(d.current_price_usdt,2)+" USDT":"—");
-    set("equity",money(d.equity_inr));set("totalPnl",money(d.total_pnl_inr));colorize(document.getElementById("totalPnl"),d.total_pnl_inr);
-    const pct=d.initial_balance_inr?d.total_pnl_inr/d.initial_balance_inr*100:0;
-    set("pnlPct",(pct>=0?"+":"")+num(pct)+"% since start");
-    set("cash",money(d.available_balance_inr));set("realized",money(d.realized_pnl_inr));colorize(document.getElementById("realized"),d.realized_pnl_inr);
-    set("unrealized",money(d.unrealized_pnl_inr));colorize(document.getElementById("unrealized"),d.unrealized_pnl_inr);
-    set("fees",money(d.total_fees_inr));set("winRate",num(d.win_rate)+"%");
-    set("tradeCount",(d.total_trades||0)+" closed trades");
-    set("signal",d.signal||"—");set("updated",d.updated_at?"Updated "+new Date(d.updated_at).toLocaleString():"Not updated");
-    set("positionSide",d.open_position?.side||"NONE");set("qty",num(d.open_position?.qty_btc,6)+" BTC");
-    set("entry",d.open_position?.entry_price_inr?money(d.open_position.entry_price_inr):"—");
-    set("marketValue",money(d.market_value_inr));
-    const i=d.indicators||{};set("ema",money(i.ema9)+" / "+money(i.ema21));set("rsi",num(i.rsi14));
-    set("macd",num(i.macd,5)+" / "+num(i.macd_signal,5));set("supertrend",i.supertrend||"—");
-    set("botMessage",d.status||"Bot is running.");
-    const body=document.getElementById("trades");body.innerHTML="";
-    (d.trades||[]).forEach(t=>{
-      const tr=document.createElement("tr");
-      const vals=[t.time?new Date(t.time).toLocaleString():"—",t.side||"—",money(t.price_inr),num(t.qty_btc,6),money(t.fee_inr),money(t.pnl_inr),t.reason||"—"];
-      vals.forEach((v,idx)=>{const td=document.createElement("td");td.textContent=v;if(idx===1)td.className=t.side==="BUY"?"positive":"negative";if(idx===5)colorize(td,t.pnl_inr);tr.appendChild(td);});
+const WS_URL = "wss://data-stream.binance.vision:443/ws/btcusdt@trade";
+
+let state = {};
+let livePriceUSDT = 0;
+let socket = null;
+let reconnectTimer = null;
+
+const money = n =>
+  "₹" + Number(n || 0).toLocaleString("en-IN", {
+    maximumFractionDigits: 2
+  });
+
+const num = (n, d = 2) =>
+  Number(n || 0).toLocaleString("en-IN", {
+    maximumFractionDigits: d
+  });
+
+function set(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function colorize(el, value) {
+  if (!el) return;
+
+  el.classList.remove("positive", "negative");
+
+  if (value > 0) el.classList.add("positive");
+  if (value < 0) el.classList.add("negative");
+}
+
+function renderDashboard() {
+  if (!state.cash_inr && state.cash_inr !== 0) return;
+
+  const rate = Number(state.usdt_inr || 90);
+  const priceUSDT = livePriceUSDT || Number(state.current_price_usdt || 0);
+  const priceINR = priceUSDT * rate;
+
+  const qty = Number(state.btc_qty || 0);
+  const cash = Number(state.cash_inr || 0);
+  const marketValue = qty * priceINR;
+
+  const unrealized = qty > 0
+    ? (priceINR - Number(state.entry_price_inr || 0)) * qty
+    : 0;
+
+  const equity = cash + marketValue;
+  const initial = Number(state.initial_balance_inr || 10000);
+  const totalPnl = equity - initial;
+
+  set("price", money(priceINR));
+  set("priceUsdt", "$" + num(priceUSDT, 2) + " USDT");
+
+  set("equity", money(equity));
+  set("totalPnl", money(totalPnl));
+
+  colorize(document.getElementById("totalPnl"), totalPnl);
+
+  const pct = initial ? totalPnl / initial * 100 : 0;
+
+  set("pnlPct", (pct >= 0 ? "+" : "") + num(pct) + "% since start");
+
+  set("cash", money(cash));
+  set("realized", money(state.realized_pnl_inr));
+  set("unrealized", money(unrealized));
+  set("fees", money(state.total_fees_inr));
+
+  colorize(document.getElementById("realized"), state.realized_pnl_inr);
+  colorize(document.getElementById("unrealized"), unrealized);
+
+  set("winRate", num(state.win_rate) + "%");
+  set("tradeCount", (state.total_trades || 0) + " closed trades");
+
+  set("positionSide", qty > 0 ? "BUY" : "NONE");
+  set("qty", num(qty, 8) + " BTC");
+
+  set(
+    "entry",
+    state.entry_price_inr ? money(state.entry_price_inr) : "—"
+  );
+
+  set("marketValue", money(marketValue));
+
+  set("signal", state.signal || "—");
+
+  const i = state.indicators || {};
+
+  set("ema", money(i.ema9) + " / " + money(i.ema21));
+  set("rsi", num(i.rsi14));
+  set("macd", num(i.macd, 5) + " / " + num(i.macd_signal, 5));
+  set("supertrend", i.supertrend || "—");
+
+  set("botMessage", state.status || "Paper bot running.");
+
+  set("updated", "Live price: " + new Date().toLocaleTimeString());
+}
+
+async function loadDashboard() {
+  try {
+    const response = await fetch(
+      DATA_URL + "?t=" + Date.now(),
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) {
+      throw new Error("Trading data not found");
+    }
+
+    state = await response.json();
+
+    if (!livePriceUSDT) {
+      livePriceUSDT = Number(state.current_price_usdt || 0);
+    }
+
+    set("botStatus", "Connecting live market...");
+    renderDashboard();
+
+    const body = document.getElementById("trades");
+    body.innerHTML = "";
+
+    (state.trades || []).forEach(t => {
+      const tr = document.createElement("tr");
+
+      const values = [
+        t.time ? new Date(t.time).toLocaleString() : "—",
+        t.side || "—",
+        money(t.price_inr),
+        num(t.qty_btc, 8),
+        money(t.fee_inr),
+        money(t.pnl_inr),
+        t.reason || "—"
+      ];
+
+      values.forEach((v, index) => {
+        const td = document.createElement("td");
+        td.textContent = v;
+
+        if (index === 1) {
+          td.className = t.side === "BUY" ? "positive" : "negative";
+        }
+
+        if (index === 5) {
+          colorize(td, t.pnl_inr);
+        }
+
+        tr.appendChild(td);
+      });
+
       body.appendChild(tr);
     });
-    if(!(d.trades||[]).length)body.innerHTML='<tr><td colspan="7" class="empty">No trades yet. Waiting for a signal.</td></tr>';
-  }catch(e){set("botStatus","Waiting for first bot run");set("botMessage",e.message+" — run the GitHub Actions workflow once.");}
+
+    if (!(state.trades || []).length) {
+      body.innerHTML =
+        '<tr><td colspan="7" class="empty">No trades yet.</td></tr>';
+    }
+
+  } catch (error) {
+    set("botStatus", "Waiting for bot data");
+    set("botMessage", error.message);
+  }
 }
-loadDashboard();setInterval(loadDashboard,60000);
+
+function connectWebSocket() {
+  if (socket) {
+    socket.close();
+  }
+
+  socket = new WebSocket(WS_URL);
+
+  socket.onopen = () => {
+    set("botStatus", "LIVE BTC CONNECTED");
+    document.querySelector(".dot").style.background = "#31d0a0";
+  };
+
+  socket.onmessage = event => {
+    try {
+      const data = JSON.parse(event.data);
+
+      livePriceUSDT = Number(data.p);
+
+      renderDashboard();
+
+    } catch (error) {
+      console.error("Price update error:", error);
+    }
+  };
+
+  socket.onerror = () => {
+    set("botStatus", "WebSocket connection error");
+  };
+
+  socket.onclose = () => {
+    set("botStatus", "Reconnecting...");
+    document.querySelector(".dot").style.background = "#eab308";
+
+    clearTimeout(reconnectTimer);
+
+    reconnectTimer = setTimeout(connectWebSocket, 3000);
+  };
+}
+
+loadDashboard();
+connectWebSocket();
+
+// Refresh saved trading data every 30 seconds.
+setInterval(loadDashboard, 30000);
